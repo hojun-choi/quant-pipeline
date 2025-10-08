@@ -1,0 +1,52 @@
+# ---- Python 기본 ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.ipynb_checkpoints/
+.mypy_cache/
+coverage.xml
+htmlcov/
+
+# ---- 가상환경/빌드 ----
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+build/
+dist/
+*.egg-info/
+
+# ---- IDE/OS ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 환경변수/비밀 ----
+.env
+.env.*
+*.secret*
+secrets.json
+
+# ---- 로그/임시 ----
+logs/
+tmp/
+temp/
+*.log
+
+# ---- 프로젝트 데이터(전부 무시) ----
+/data/**
+
+# 단, 디렉터리 골격 유지를 위해 .gitkeep은 허용
+!/data/.gitkeep
+
+# (원하면 하위 폴더 골격도 유지)
+/data/ohlcv/
+!/data/ohlcv/.gitkeep
+/data/features-all/
+!/data/features-all/.gitkeep
+/data/features_all/
+!/data/features_all/.gitkeep

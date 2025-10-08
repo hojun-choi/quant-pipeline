@@ -50,8 +50,7 @@ def atomic_write_parquet(df: pl.DataFrame, out_path: str, compression: str = "zs
 def parse_utc_date(s: str) -> date:
     s = s.strip()
     if s.lower() == "yesterday":
-        # placeholder, 실제 날짜 계산은 main에서
-        return None  # type: ignore
+        return None  # handled in main
     if "T" in s:
         s2 = s.replace(" ", "T")
         if s2.endswith("Z"):
@@ -180,8 +179,10 @@ def rows_to_df(symbol: str, rows: List[List[Any]]) -> pl.DataFrame:
 # ---------- per-day ingest (no checkpoints) ----------
 
 def ingest_one_day(symbol: str, interval: str, d: date, out_root: str,
-                   limit: int, target_weight_per_minute: int, force: bool = False):
-    out_dir = os.path.join(out_root, symbol); ensure_dir(out_dir)
+                   limit: int, target_weight_per_minute: int, force: bool,
+                   granularity: str):
+    # out_root/SYMBOL/GRAN/YYYY-MM-DD.parquet
+    out_dir = os.path.join(out_root, symbol, granularity); ensure_dir(out_dir)
     out_path = os.path.join(out_dir, f"{d.strftime('%Y-%m-%d')}.parquet")
     if os.path.exists(out_path) and not force:
         print(f"[{symbol}] {d} exists → skip"); return
@@ -225,6 +226,7 @@ def main():
     ap.add_argument("--start", type=str, required=True, help="UTC date or ISO; date part used. e.g., 2024-10-01")
     ap.add_argument("--end", type=str, default=None, help="UTC date inclusive OR 'yesterday'. If omitted, yesterday(UTC).")
     ap.add_argument("--out", type=str, default="data/ohlcv/binance-spot", help="Output root")
+    ap.add_argument("--granularity", type=str, default="1s", help="Subfolder under each symbol (e.g., 1s)")
     ap.add_argument("--limit", type=int, default=1000, help="klines page size (<=1000)")
     ap.add_argument("--weight", type=int, default=5000, help="Target used-weight per minute")
     ap.add_argument("--force", action="store_true", help="Overwrite even if the daily file exists")
@@ -270,6 +272,7 @@ def main():
     print(f"[INFO] effective range   = {start_d} .. {end_d} (inclusive)")
 
     symbols = [s.strip().upper() for s in args.symbols.split(",") if s.strip()]
+    gran = args.granularity.strip()
 
     cur = start_d
     while cur <= end_d:
@@ -282,7 +285,8 @@ def main():
                     out_root=args.out,
                     limit=args.limit,
                     target_weight_per_minute=args.weight,
-                    force=args.force
+                    force=args.force,
+                    granularity=gran
                 )
             except KeyboardInterrupt:
                 print("\nInterrupted."); sys.exit(1)
